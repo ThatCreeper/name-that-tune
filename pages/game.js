@@ -13,8 +13,10 @@ export default class Game extends React.Component {
       incorrect: false,
       correct: false,
       correctAwensers: [],
+      correctAuthors: [],
       guess: "",
-      playAudio: true
+      playAudio: true,
+      author: false
     };
     this.gameDoc = null;
     this.songs = 0;
@@ -37,7 +39,8 @@ export default class Game extends React.Component {
           players: doc.scores,
           running: doc.started,
           song: doc.song,
-          playAudio: !doc.hostAudio
+          playAudio: !doc.hostAudio,
+          author: doc.author
         });
         db.collection("data")
           .doc("songs")
@@ -47,45 +50,60 @@ export default class Game extends React.Component {
             this.songs = songData.songs.length;
             this.setState({
               songURL: songData.songs[this.state.song].url,
-              correctAwensers: songData.songs[this.state.song].awensers
+              correctAwensers: songData.songs[this.state.song].awensers,
+              correctAuthors: songData.songs[this.state.song].authors
             });
           });
       });
   }
   guess() {
-    if (this.state.correctAwensers.includes(this.state.guess.toLowerCase())) {
-      this.setState({ correct: true });
-
-      if (this.gameDoc == null) return;
-      this.gameDoc.scores[this.props.query.name] += 10;
-      var newSong = Math.floor(Math.random() * this.songs);
-      this.gameDoc.song = newSong;
-      this.setState({ guess: "" });
-      this.gameDoc.songCount++;
-      if (this.gameDoc.songCount == 10) {
-        db.collection("data")
-          .doc("games")
-          .set(
-            {
-              [this.props.query.code]: firebase.firestore.FieldValue.delete()
-            },
-            { merge: true }
-          );
-        return;
+    if (this.state.author) {
+      if (this.state.correctAuthors.includes(this.state.guess.toLowerCase())) {
+        this.setState({ correct: true, incorrect: false, author: false });
+        this.nextSong();
       } else {
-        db.collection("data")
-          .doc("games")
-          .set(
-            {
-              [this.props.query.code]: this.gameDoc
-            },
-            { merge: true }
-          );
-        this.setState({ correct: true });
-        return;
+        this.setState({ incorrect: true, correct: false });
       }
     } else {
-      this.setState({ incorrect: true });
+      if (this.state.correctAwensers.includes(this.state.guess.toLowerCase())) {
+        this.setState({ correct: true, incorrect: false, author: true });
+        if (this.state.correctAuthors == null) {
+          this.nextSong();
+        }
+      } else {
+        this.setState({ incorrect: true, correct: false });
+      }
+    }
+  }
+  nextSong() {
+    if (this.gameDoc == null) return;
+    this.gameDoc.scores[this.props.query.name] += 10;
+    this.gameDoc.author = false;
+    var newSong = Math.floor(Math.random() * this.songs);
+    this.gameDoc.song = newSong;
+    this.setState({ guess: "" });
+    this.gameDoc.songCount++;
+    if (this.gameDoc.songCount == 10) {
+      db.collection("data")
+        .doc("games")
+        .set(
+          {
+            [this.props.query.code]: firebase.firestore.FieldValue.delete()
+          },
+          { merge: true }
+        );
+      return;
+    } else {
+      db.collection("data")
+        .doc("games")
+        .set(
+          {
+            [this.props.query.code]: this.gameDoc
+          },
+          { merge: true }
+        );
+      this.setState({ correct: true });
+      return;
     }
   }
   render() {

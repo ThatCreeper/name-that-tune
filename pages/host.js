@@ -153,7 +153,7 @@ export default class Host extends React.Component {
               Start Game
             </button>
           )}
-          {!this.state.running && this.state.hostAudio && (
+          {!this.state.running && this.state.playAudio && (
             <button
               className="btn btn-outline-dark"
               onClick={() => this.switchHostAudio()}
@@ -161,7 +161,7 @@ export default class Host extends React.Component {
               Turn host audio off
             </button>
           )}
-          {!this.state.running && !this.state.hostAudio && (
+          {!this.state.running && !this.state.playAudio && (
             <button
               className="btn btn-outline-dark"
               onClick={() => this.switchHostAudio()}
