@@ -35,6 +35,8 @@ export default class Game extends React.Component {
           return;
         }
         console.log(doc);
+        if (doc.author == false && this.state.song == doc.song)
+          this.setState({ songURL: "" });
         this.setState({
           players: doc.scores,
           running: doc.started,
@@ -107,6 +109,8 @@ export default class Game extends React.Component {
     }
   }
   render() {
+    var qText = "SONG";
+    if (this.state.author == true) qText = "AUTHOR";
     return (
       <div>
         <Header />
@@ -155,7 +159,7 @@ export default class Game extends React.Component {
                     <input
                       type="text"
                       className="form-control text-center"
-                      placeholder="SONG"
+                      placeholder={qText + " NAME"}
                       value={this.state.guess}
                       onChange={e => this.setState({ guess: e.target.value })}
                     />

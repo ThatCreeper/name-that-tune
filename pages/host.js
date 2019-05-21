@@ -57,6 +57,8 @@ export default class Host extends React.Component {
           this.setState({ gameDone: true });
           return;
         }
+        if (doc.scores != this.state.players && this.state.song == doc.song)
+          this.setState({ songURL: "" });
         console.log(doc);
         this.setState({
           players: doc.scores,
