@@ -58,7 +58,8 @@ export default class Game extends React.Component {
           });
       });
   }
-  guess() {
+  guess(e) {
+    e.preventDefault();
     if (this.state.author) {
       if (this.state.correctAuthors.includes(this.state.guess.toLowerCase())) {
         this.setState({ correct: true, incorrect: false, author: false });
@@ -68,7 +69,12 @@ export default class Game extends React.Component {
       }
     } else {
       if (this.state.correctAwensers.includes(this.state.guess.toLowerCase())) {
-        this.setState({ correct: true, incorrect: false, author: true });
+        this.setState({
+          correct: true,
+          incorrect: false,
+          author: true,
+          guess: ""
+        });
         if (this.state.correctAuthors == null) {
           this.nextSong();
         }
@@ -155,24 +161,22 @@ export default class Game extends React.Component {
                 </div>
                 <div className="col-9">
                   {this.state.playAudio && <Video url={this.state.songURL} />}
-                  <div className="input-group input-group-lg">
-                    <input
-                      type="text"
-                      className="form-control text-center"
-                      placeholder={qText + " NAME"}
-                      value={this.state.guess}
-                      onChange={e => this.setState({ guess: e.target.value })}
-                    />
-                    <div className="input-group-append">
-                      <button
-                        onClick={() => this.guess()}
-                        className="btn btn-success"
-                        type="button"
-                      >
-                        Guess!
-                      </button>
+                  <form onSubmit={e => this.guess(e)}>
+                    <div className="input-group input-group-lg">
+                      <input
+                        type="text"
+                        className="form-control text-center"
+                        placeholder={qText + " NAME"}
+                        value={this.state.guess}
+                        onChange={e => this.setState({ guess: e.target.value })}
+                      />
+                      <div className="input-group-append">
+                        <button className="btn btn-success" type="submit">
+                          Guess!
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </form>
                   <br />
                   {this.state.incorrect && (
                     <div class="alert alert-danger" role="alert">
