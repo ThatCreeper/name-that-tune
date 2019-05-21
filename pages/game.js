@@ -13,7 +13,8 @@ export default class Game extends React.Component {
       incorrect: false,
       correct: false,
       correctAwensers: [],
-      guess: ""
+      guess: "",
+      playAudio: true
     };
     this.gameDoc = null;
     this.songs = 0;
@@ -35,7 +36,8 @@ export default class Game extends React.Component {
         this.setState({
           players: doc.scores,
           running: doc.started,
-          song: doc.song
+          song: doc.song,
+          playAudio: !doc.hostAudio
         });
         db.collection("data")
           .doc("songs")
@@ -130,7 +132,7 @@ export default class Game extends React.Component {
                   </table>
                 </div>
                 <div className="col-9">
-                  <Video url={this.state.songURL} />
+                  {this.state.playAudio && <Video url={this.state.songURL} />}
                   <div className="input-group input-group-lg">
                     <input
                       type="text"

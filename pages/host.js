@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Header from "../components/header";
+import Video from "../components/video";
 export default class Host extends React.Component {
   constructor(props) {
     super(props);
@@ -8,7 +9,10 @@ export default class Host extends React.Component {
       running: false,
       players: {},
       gameDone: false,
-      gameCode: "000000"
+      gameCode: "000000",
+      song: 0,
+      songURL: "",
+      playAudio: false
     };
     this.gameDoc = null;
   }
@@ -38,7 +42,8 @@ export default class Host extends React.Component {
             scores: {},
             song: 0,
             songCount: 0,
-            started: false
+            started: false,
+            hostAudio: false
           }
         },
         { merge: true }
@@ -55,8 +60,20 @@ export default class Host extends React.Component {
         console.log(doc);
         this.setState({
           players: doc.scores,
-          running: doc.started
+          running: doc.started,
+          song: doc.song,
+          playAudio: doc.hostAudio
         });
+        db.collection("data")
+          .doc("songs")
+          .get()
+          .then(doc => {
+            var songData = doc.data();
+            this.songs = songData.songs.length;
+            this.setState({
+              songURL: songData.songs[this.state.song].url
+            });
+          });
       });
   }
   startGame() {
@@ -64,6 +81,20 @@ export default class Host extends React.Component {
     db.collection("data")
       .doc("games")
       .set({ [this.state.gameCode]: this.gameDoc }, { merge: true });
+  }
+  switchHostAudio() {
+    this.gameDoc.hostAudio = !this.gameDoc.hostAudio;
+    db.collection("data")
+      .doc("games")
+      .set({ [this.state.gameCode]: this.gameDoc }, { merge: true });
+  }
+  componentWillUnmount() {
+    db.collection("data")
+      .doc("games")
+      .set(
+        { [this.state.gameCode]: firebase.firestore.FieldValue.delete() },
+        { merge: true }
+      );
   }
   render() {
     return (
@@ -92,24 +123,27 @@ export default class Host extends React.Component {
             </div>
           )}
           {this.state.running && (
-            <table className="table table-bordered table-dark col-sm-12 col-md-3">
-              <thead className="thead-light">
-                <tr>
-                  <th>Username</th>
-                  <th>Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(this.state.players).map(key => {
-                  return (
-                    <tr key={key}>
-                      <td>{key}</td>
-                      <td>{this.state.players[key]}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div>
+              {this.state.playAudio && <Video url={this.state.songURL} />}
+              <table className="table table-bordered table-dark col-sm-12 col-md-3">
+                <thead className="thead-light">
+                  <tr>
+                    <th>Username</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(this.state.players).map(key => {
+                    return (
+                      <tr key={key}>
+                        <td>{key}</td>
+                        <td>{this.state.players[key]}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
           {!this.state.running && (
             <button
@@ -117,6 +151,22 @@ export default class Host extends React.Component {
               className="btn btn-outline-success btn-lg"
             >
               Start Game
+            </button>
+          )}
+          {!this.state.running && this.state.hostAudio && (
+            <button
+              className="btn btn-outline-dark"
+              onClick={() => this.switchHostAudio()}
+            >
+              Turn host audio off
+            </button>
+          )}
+          {!this.state.running && !this.state.hostAudio && (
+            <button
+              className="btn btn-outline-dark"
+              onClick={() => this.switchHostAudio()}
+            >
+              Turn host audio on
             </button>
           )}
           {this.state.gameDone && (
